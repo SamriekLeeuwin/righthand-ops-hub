@@ -1,0 +1,20 @@
+{
+  "name": "righthand-ops-hub",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only apps/api/src/server.ts",
+    "build": "tsc -p ."
+  },
+  "dependencies": {
+    "@prisma/client": "^5.17.0",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.27.2",
+    "mongodb": "^6.8.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.17.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.5.4"
+  }
+}
