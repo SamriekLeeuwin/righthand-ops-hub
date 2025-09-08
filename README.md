@@ -1,7 +1,7 @@
 # RightHand Ops Hub
 
 A learning + showcase project where I’m building a **mini-operations hub** step by step.  
-Think of it as a lightweight mix of a **task manager, incident tracker, and automation tool** — but with the main goal of showing how **real-world backends** actually work.
+Think of it as a lightweight mix of a **task manager, incident tracker, and automation tool** but with the main goal of showing how **real-world backends** actually work.
 
 ---
 
