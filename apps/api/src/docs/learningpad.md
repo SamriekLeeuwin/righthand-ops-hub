@@ -64,3 +64,32 @@ The goal is to reflect on what I’ve learned so far and show progress over time
 - Backend development is not just code → it’s about **architecture, security, observability, and DevOps mindset**.  
 - Using containers and configs makes projects **portable, secure, and scalable**.  
 - A clean repo and clear docs are just as important as working code.  
+
+---
+
+##  Database migration and tests (2025-09-08)
+
+### What changed
+- Added Prisma `Role` enum: `admin | editor | viewer`.
+- Tightened column types: `email` `@db.VarChar(254)`, `password` `@db.VarChar(255)`.
+- Added `@@index([createdAt])` on `User`.
+- Ensured datasource is MySQL with `DATABASE_URL`.
+
+### Commands run
+```bash
+# Fix .env encoding (Windows) and set DATABASE_URL
+# then start MySQL and apply changes
+# (executed)
+docker compose up -d mysql
+npx prisma generate
+npx prisma migrate dev -n "user_roles_and_indexes"
+```
+
+### Notes and fixes
+- Fixed `.env` encoding error (was UTF-16) by recreating as UTF-8.
+- Resolved Windows file lock on Prisma engine by stopping Node processes.
+- Prisma versions warning observed (`prisma@5.22.0` vs `@prisma/client@6.15.0`). Consider aligning versions.
+
+### Verification
+- Migration applied successfully; database in sync with `schema.prisma`.
+- Prisma Client generated and usable in the app.

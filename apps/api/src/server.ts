@@ -2,6 +2,7 @@ import 'dotenv/config';
 import Fastify from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import { MongoClient } from 'mongodb';
+import { authRoutes } from './modules/auth/auth.routes.js';
 
 const app = Fastify();
 const prisma = new PrismaClient();
@@ -34,6 +35,9 @@ app.get('/healthz', async () => {
     time: new Date().toISOString()
   };
 });
+
+// Register auth routes
+app.register(authRoutes, { prefix: '/api/auth' });
 
 app.listen({ port: Number(process.env.PORT) || 3000 }, (err, address) => {
   if (err) {

@@ -161,10 +161,19 @@ export async function loginUser(request: FastifyRequest, reply: FastifyReply): P
  * @param reply - Fastify reply object for sending response
  * @returns Promise<void>
  */
-export async function getCurrentUser(request: AuthenticatedRequest, reply: FastifyReply): Promise<void> {
+export async function getCurrentUser(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   try {
-    // User information is added to request by auth middleware
-    const user = request.user;
+    // Type guard: Check if user property exists (added by auth middleware)
+    if (!('user' in request)) {
+      reply.code(401).send({ 
+        error: 'Authentication required',
+        message: 'You must be logged in to access this resource.'
+      });
+      return;
+    }
+    
+    // Now we know request has user property, safe to cast
+    const user = (request as AuthenticatedRequest).user;
     
     if (!user) {
       reply.code(401).send({ 
@@ -211,7 +220,7 @@ export async function getCurrentUser(request: AuthenticatedRequest, reply: Fasti
  * @param reply - Fastify reply object for sending response
  * @returns Promise<void>
  */
-export async function logoutUser(request: AuthenticatedRequest, reply: FastifyReply): Promise<void> {
+export async function logoutUser(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   try {
     // Get token from Authorization header
     const authHeader = request.headers.authorization;

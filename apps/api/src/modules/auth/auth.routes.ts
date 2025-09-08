@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { registerUser, loginUser, getCurrentUser, logoutUser, refreshToken } from './auth.controller.js';
 import { authGuard } from '../../middleware/authGuard.js';
+import { PrismaClient } from '@prisma/client';
 
 // Constants
 // SALT_ROUNDS determines how many times the password is hashed
