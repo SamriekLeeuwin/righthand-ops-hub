@@ -16,7 +16,60 @@
 //    - updateProject(id, { name?, description? })
 //    - deleteProject(id) → also decide on cascading: delete tasks or block if tasks exist
 //    - countProjects({ ownerId? }) for pagination metadata
-//
+
+
+import { PrismaClient, Prisma } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+export type CreateProjectInput = {
+  name: string
+  description?: string | null
+  ownerId: number
+}
+
+export async function createProject({ name, description, ownerId }: CreateProjectInput) {
+  const trimmedName = typeof name === 'string' ? name.trim() : ''
+  const trimmedDescription = typeof description === 'string' ? description.trim() : undefined
+
+  if (!trimmedName) {
+    throw new Error('Project name is required')
+  }
+  if (trimmedName.length > 120) {
+    throw new Error('Project name exceeds 120 characters')
+  }
+  if (trimmedDescription && trimmedDescription.length > 500) {
+    throw new Error('Project description exceeds 500 characters')
+  }
+  if (!Number.isInteger(ownerId) || ownerId <= 0) {
+    throw new Error('ownerId must be a positive integer')
+  }
+
+  const owner = await prisma.user.findUnique({ where: { id: ownerId }, select: { id: true } })
+  if (!owner) {
+    throw new Error('Owner user not found')
+  }
+
+  try {
+    const client: any = prisma
+    const project = await client.project.create({
+      data: {
+        name: trimmedName,
+        description: trimmedDescription,
+        ownerId,
+      },
+    })
+    return project
+  } catch (error) {
+    // Prisma unique constraint error code: P2002
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      throw new Error('A project with this name already exists for this owner')
+    }
+    throw error
+  }
+}
+
+
 // 3) Prisma queries to research
 //    - Filtering with where: { ownerId, name: { contains: search, mode: 'insensitive' } }
 //    - Include relations: include: { tasks: true }
