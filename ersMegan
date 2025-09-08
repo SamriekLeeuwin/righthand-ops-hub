@@ -1,5 +1,0 @@
-warning: in the working copy of 'package-lock.json', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
- package-lock.json | 168 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++[m[31m-[m
- package.json      |   4 [32m++[m
- 2 files changed, 169 insertions(+), 3 deletions(-)
