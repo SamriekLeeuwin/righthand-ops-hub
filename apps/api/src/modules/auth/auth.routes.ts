@@ -1,120 +1,85 @@
 import { FastifyInstance } from 'fastify';
-import { PrismaClient } from "@prisma/client";
-import bcrypt from 'bcryptjs';
+import { registerUser, loginUser, getCurrentUser, logoutUser, refreshToken } from './auth.controller.js';
+import { authGuard } from '../../middleware/authGuard.js';
 
 // Constants
+// SALT_ROUNDS determines how many times the password is hashed
+// Higher number = more secure but slower
+// 10 is a good balance between security and performance
 const SALT_ROUNDS = 10;
 
 // Prisma client instance
+// This creates a connection to our MySQL database
+// Prisma automatically generates TypeScript types from our schema.prisma
 export const prisma = new PrismaClient();
 
 /**
  * Authentication routes plugin
- * Handles user registration, login, and profile management
+ * This is a Fastify plugin that contains all authentication-related endpoints
+ * Plugins allow us to organize code into modules and register them with the main app
+ * 
+ * Why use plugins?
+ * - Modularity: Each feature has its own file
+ * - Reusability: Can be used in other projects
+ * - Testability: Can test auth routes independently
+ * - Teamwork: Different developers can work on different modules
  */
 export async function authRoutes(fastify: FastifyInstance) {
   
   /**
    * POST /api/auth/register
-   * Register a new user
+   * Register a new user endpoint
+   * 
+   * Why POST? Because we're creating new data (user) on the server
+   * POST requests can have a body with data, unlike GET requests
    * 
    * Body: { email: string, password: string }
    * Returns: { message: string, user: { id, email, role } }
+   * 
+   * Security considerations:
+   * - Password is hashed before storing (never store plain text passwords)
+   * - Email is validated and checked for duplicates
+   * - User role defaults to 'viewer' (principle of least privilege)
    */
-  fastify.post('/register', async (request, reply) => {
-    try {
-      const { email, password } = request.body as { email: string; password: string };
-      
-      // Validate input
-      if (!email || !password) {
-        return reply.code(400).send({ error: 'Email and password are required' });
-      }
-      
-      // Check if user already exists
-      const existingUser = await prisma.user.findUnique({
-        where: { email }
-      });
-      
-      if (existingUser) {
-        return reply.code(400).send({ error: 'User already exists' });
-      }
-
-      // Hash password
-      const hash = await bcrypt.hash(password, SALT_ROUNDS);
-      
-      // Create new user
-      const user = await prisma.user.create({
-        data: {
-          email,
-          password: hash,
-          role: 'viewer'
-        }
-      });
-      
-      return reply.code(201).send({ 
-        message: 'User created successfully',
-        user: { id: user.id, email: user.email, role: user.role }
-      });
-    } catch (error) {
-      console.error('Registration error:', error);
-      return reply.code(500).send({ error: 'Internal server error' });
-    }
-  });
+  // Register endpoint - delegates to controller
+  fastify.post('/register', registerUser);
 
   /**
    * POST /api/auth/login
-   * Login with email and password
+   * Login endpoint for existing users
+   * 
+   * Why POST? Because we're sending sensitive data (password) in the body
+   * GET requests put data in the URL, which could be logged or cached
    * 
    * Body: { email: string, password: string }
    * Returns: { message: string, token: string, user: { id, email, role } }
+   * 
+   * Security considerations:
+   * - Password is verified using bcrypt.compare (timing-safe comparison)
+   * - Same error message for invalid email vs invalid password (prevents user enumeration)
+   * - JWT token will be returned for authenticated requests
    */
-  fastify.post('/login', async (request, reply) => {
-    try {
-      const { email, password } = request.body as { email: string; password: string };
-      
-      // Validate input
-      if (!email || !password) {
-        return reply.code(400).send({ error: 'Email and password are required' });
-      }
-      
-      // Find user
-      const user = await prisma.user.findUnique({
-        where: { email }
-      });
-      
-      if (!user) {
-        return reply.code(401).send({ error: 'Invalid credentials' });
-      }
-      
-      // Verify password
-      const isValidPassword = await bcrypt.compare(password, user.password);
-      if (!isValidPassword) {
-        return reply.code(401).send({ error: 'Invalid credentials' });
-      }
-      
-      // TODO: Generate JWT token
-      const token = 'jwt-token-here';
-      
-      return reply.send({ 
-        message: 'Login successful',
-        token,
-        user: { id: user.id, email: user.email, role: user.role }
-      });
-    } catch (error) {
-      console.error('Login error:', error);
-      return reply.code(500).send({ error: 'Internal server error' });
-    }
-  });
+  // Login endpoint - delegates to controller
+  fastify.post('/login', loginUser);
 
   /**
    * GET /api/auth/me
-   * Get current user profile
+   * Get current user profile endpoint
+   * 
+   * Why GET? We're retrieving data, not creating or modifying
    * 
    * Headers: { Authorization: "Bearer <token>" }
    * Returns: { user: { id, email, role } }
+   * 
+   * This endpoint will be protected by JWT middleware
+   * The middleware will verify the token and add user info to the request
    */
-  fastify.get('/me', async (request, reply) => {
-    // TODO: Add JWT authentication middleware
-    return reply.send({ message: 'Get current user - TODO: implement JWT auth' });
-  });
+  // Get current user endpoint - requires authentication
+  fastify.get('/me', { preHandler: authGuard }, getCurrentUser);
+
+  // Logout endpoint - requires authentication
+  fastify.post('/logout', { preHandler: authGuard }, logoutUser);
+
+  // Refresh token endpoint - no auth required (uses refresh token)
+  fastify.post('/refresh', refreshToken);
 }
