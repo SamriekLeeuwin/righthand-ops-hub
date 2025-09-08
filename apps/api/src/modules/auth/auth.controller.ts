@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service.js';
+import { AuthenticatedRequest } from './Custom.Interface.js';
 
 // Constants
 const SALT_ROUNDS = 10;
@@ -160,10 +161,10 @@ export async function loginUser(request: FastifyRequest, reply: FastifyReply): P
  * @param reply - Fastify reply object for sending response
  * @returns Promise<void>
  */
-export async function getCurrentUser(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+export async function getCurrentUser(request: AuthenticatedRequest, reply: FastifyReply): Promise<void> {
   try {
     // User information is added to request by auth middleware
-    const user = (request as any).user;
+    const user = request.user;
     
     if (!user) {
       reply.code(401).send({ 
@@ -210,7 +211,7 @@ export async function getCurrentUser(request: FastifyRequest, reply: FastifyRepl
  * @param reply - Fastify reply object for sending response
  * @returns Promise<void>
  */
-export async function logoutUser(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+export async function logoutUser(request: AuthenticatedRequest, reply: FastifyReply): Promise<void> {
   try {
     // Get token from Authorization header
     const authHeader = request.headers.authorization;

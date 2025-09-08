@@ -61,7 +61,7 @@ export class AuthService {
       expiresIn: JWT_EXPIRES_IN,
       issuer: 'righthand-ops-hub',
       audience: 'righthand-ops-hub-users'
-    });
+    } as jwt.SignOptions);
   }
 
   /**
@@ -82,7 +82,7 @@ export class AuthService {
       expiresIn: JWT_REFRESH_EXPIRES_IN,
       issuer: 'righthand-ops-hub',
       audience: 'righthand-ops-hub-refresh'
-    });
+    } as jwt.SignOptions);
   }
 
   /**
@@ -118,7 +118,7 @@ export class AuthService {
       const decoded = jwt.verify(token, JWT_SECRET, {
         issuer: 'righthand-ops-hub',
         audience: ['righthand-ops-hub-users', 'righthand-ops-hub-refresh']
-      }) as JWTPayload;
+      } as jwt.VerifyOptions) as JWTPayload;
 
       return decoded;
     } catch (error) {
