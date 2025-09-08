@@ -139,7 +139,7 @@ playwright-report/
 .local/
 .cache/
 
-# Package manager lockfiles (uncomment if you want to ignore them)
+# Package manager lockfiles 
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml

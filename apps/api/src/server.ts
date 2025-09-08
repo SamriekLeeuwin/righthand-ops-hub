@@ -40,5 +40,5 @@ app.listen({ port: Number(process.env.PORT) || 3000 }, (err, address) => {
     console.error(err);
     process.exit(1);
   }
-  console.log(`🚀 Server ready at ${address}`);
+  console.log(` Server ready at ${address}`);
 });
